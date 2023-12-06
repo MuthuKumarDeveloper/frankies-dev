@@ -21,9 +21,8 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    console.log("Connected to MongoDB");
     // Start the server
-    app.listen(3001, () => {
+    app.listen(3000, () => {
       console.log("Server running on port 3000");
     });
   })
