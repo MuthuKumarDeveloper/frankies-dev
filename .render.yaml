@@ -5,4 +5,4 @@ buildCommand: |
 
 startCommand: npm start
 env:
-  NODE_VERSION: 18
+  NODE_VERSION: 14
