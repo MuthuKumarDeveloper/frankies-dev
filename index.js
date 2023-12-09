@@ -5,7 +5,6 @@ const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
 
-
 const addUser = require("./api/add_user");
 const updateUser = require("./api/update_user");
 const deleteUser = require("./api/delete_user");
@@ -45,15 +44,9 @@ mongoose
     console.error("Failed to connect to MongoDB:", error);
   });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
-// 404 Not Found middleware
-app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
 });
 
 app.post("/api/users/create", (req, res) => {
@@ -103,17 +96,42 @@ app.delete("/api/users/delete/:id", (req, res) => {
 });
 
 // Login route
-app.post("/api/users/login", (req, res) => {
+app.post("/api/users/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // Authenticate the user using the loginUser function
-  loginUser(email, password)
-    .then((user) => {
-      res.status(200).json({ message: "Login successful", user });
-    })
-    .catch((error) => {
-      res.status(401).json({ error });
-    });
+  try {
+    const loginResult = await loginUser(email, password, true);
+
+    if (loginResult === "OTP sent successfully") {
+      res.status(200).json({ message: "OTP sent successfully" });
+    } else {
+      res.status(200).json({ message: "Login successful", user: loginResult });
+    }
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+});
+
+// OTP verification route
+app.post("/api/users/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const loginResult = await loginUser(
+      email,
+      null,
+      true,
+      otp
+    );
+
+    if (loginResult === "OTP verified successfully") {
+      res.status(200).json({ message: "OTP verified successfully" });
+    } else {
+      res.status(401).json({ error: "Invalid OTP" });
+    }
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
 });
 
 // Order Confirm API
@@ -259,7 +277,6 @@ app.get("/api/profile/:userId", async (req, res) => {
 
   try {
     const userProfile = await getUserProfile(userId);
-    console.log("userProfile", userProfile);
 
     if (!userProfile) {
       return res.status(404).json({ error: "User not found" });
@@ -267,19 +284,18 @@ app.get("/api/profile/:userId", async (req, res) => {
 
     res.status(200).json(userProfile);
   } catch (error) {
-    console.error("Error fetching user profile:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });
   }
 });
 
 // Get all categories
 app.get("/api/categories", async (_req, res) => {
+  console.log("Received GET request to /api/categories");
   try {
     const categories = await getAllCategories();
 
     res.status(200).json(categories);
   } catch (error) {
-    console.error("Error fetching categories:", error);
     res.status(500).json({ error: "Failed to fetch categories" });
   }
 });
@@ -294,4 +310,10 @@ app.get("/api/foodMenus", async (req, res) => {
     console.error("Error fetching food menu items:", error);
     res.status(500).json({ error: "Failed to fetch food menu items" });
   }
+});
+
+// 404 Not Found middleware
+app.use((req, res) => {
+  console.log(`404: Not Found - ${req.method} ${req.url}`);
+  res.status(404).json({ error: "Not Found" });
 });
