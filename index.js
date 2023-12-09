@@ -11,10 +11,15 @@ const getAllCategories = require("./api/get_categories");
 const orderController = require("./api/order_controller");
 const foodMenuController = require("./api/food_menu");
 
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 // Create an Express app
 const app = express();
 
 // Connect to MongoDB
+const PORT = process.env.PORT || 3000;
 mongoose
   .connect("mongodb://localhost:27017/frankies", {
     useNewUrlParser: true,
@@ -22,7 +27,7 @@ mongoose
   })
   .then(() => {
     // Start the server
-    app.listen(8080, () => {
+    app.listen(PORT, () => {
       console.log("Server running on port 8080");
     });
   })
@@ -121,21 +126,23 @@ app.put("/api/orders/cancel/:orderId", async (req, res) => {
 });
 
 // Order Placement API
-app.post('/api/orders/place', async (req, res) => {
+app.post("/api/orders/place", async (req, res) => {
   const orderData = req.body;
 
   try {
     const savedOrder = await orderController.placeOrder(orderData);
 
-    res.status(201).json({ message: 'Order placed successfully', order: savedOrder });
+    res
+      .status(201)
+      .json({ message: "Order placed successfully", order: savedOrder });
   } catch (error) {
-    console.error('Error placing order:', error);
-    res.status(500).json({ error: 'Failed to place order' });
+    console.error("Error placing order:", error);
+    res.status(500).json({ error: "Failed to place order" });
   }
 });
 
 // Get order details by orderId
-app.get('/api/orders/:orderId', async (req, res) => {
+app.get("/api/orders/:orderId", async (req, res) => {
   const orderId = req.params.orderId;
 
   try {
@@ -143,8 +150,8 @@ app.get('/api/orders/:orderId', async (req, res) => {
 
     res.status(200).json(orderDetails);
   } catch (error) {
-    console.error('Error fetching order details:', error);
-    res.status(404).json({ error: 'Order not found' });
+    console.error("Error fetching order details:", error);
+    res.status(404).json({ error: "Order not found" });
   }
 });
 
