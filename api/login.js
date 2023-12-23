@@ -1,96 +1,34 @@
 const bcrypt = require("bcrypt");
-const User = require("../models/User");
-const twilio = require("twilio");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const otpGenerator = require("otp-generator");
+const User = require("../models/User");
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const secretKey = process.env.JWT_SECRET;
 
-const client = new twilio(accountSid, authToken);
-
-const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes
-
-function generateOTP() {
-  return otpGenerator.generate(6, {
-    upperCase: false,
-    specialChars: false,
-  });
-}
-
-async function sendOTPSMS(phoneNumber, otp) {
-  const formattedPhoneNumber = `+91${String(phoneNumber).replace(/\D/g, "")}`;
-
-  try {
-    // Send OTP via Twilio SMS
-    await client.messages.create({
-      body: `Your OTP for login is: ${otp}`,
-      from: twilioPhoneNumber,
-      to: formattedPhoneNumber,
-    });
-
-  } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error(`Failed to send OTP: ${error.message}`);
-  }
-}
-
-async function loginUser(email, password, useOTP, providedOTP) {
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-
-    if (useOTP) {
-      if (providedOTP) {
-        // Verify provided OTP
-        console.log("user.otp", user.otp)
-        if (
-          user.otp &&
-          user.otp.code === providedOTP &&
-          user.otp.expiresAt > new Date()
-        ) {
-          // Clear OTP data after successful verification
-          user.otp = undefined;
-          await user.save();
-
-          return "OTP verified successfully";
-        } else {
-          throw new Error("Invalid OTP or expired");
+function loginUser(email, password) {
+  return new Promise((resolve, reject) => {
+    User.findOne({ email })
+      .then((user) => {
+        if (!user) {
+          return reject("Invalid email or password");
         }
-      } else {
-        // Generate and send OTP
-        const otp = generateOTP();
 
-        // Store OTP and its expiration time in the user's record in the database
-        user.otp = {
-          code: otp,
-          expiresAt: new Date(Date.now() + OTP_EXPIRATION_TIME),
-        };
-
-        await user.save();
-
-        // Send OTP via Twilio SMS
-        await sendOTPSMS(user?.phone, otp);
-
-        return "OTP sent successfully";
-      }
-    } else {
-      const passwordMatch = await bcrypt.compare(password, user.password);
-
-      if (!passwordMatch) {
-        throw new Error("Invalid email or password");
-      }
-
-      return user;
-    }
-  } catch (error) {
-    console.error("Error processing login request:", error);
-    throw new Error(`Failed to process login request: ${error.message}`);
-  }
+        // Compare the provided password with the hashed password in the database
+        bcrypt.compare(password, user.password, (err, result) => {
+          if (err || !result) {
+            return reject("Invalid email or password");
+          }
+          const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            secretKey
+          );
+          resolve({ user, token });
+        });
+      })
+      .catch((error) => {
+        reject("Failed to process login request");
+      });
+  });
 }
 
 module.exports = loginUser;

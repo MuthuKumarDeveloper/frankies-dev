@@ -105,7 +105,7 @@ app.post("/api/users/login", async (req, res) => {
     if (loginResult === "OTP sent successfully") {
       res.status(200).json({ message: "OTP sent successfully" });
     } else {
-      res.status(200).json({ message: "Login successful", user: loginResult });
+      res.status(200).json({ message: "Login successful", data: loginResult });
     }
   } catch (error) {
     res.status(401).json({ error: error.message });
