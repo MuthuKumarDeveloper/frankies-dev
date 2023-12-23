@@ -57,7 +57,6 @@ async function getOrderDetails(orderId) {
 
 async function placeOrder(orderData) {
   try {
-    // Generate a unique order ID (You can implement this function)
     const orderId = generateOrderId();
 
     // Create a new order object
