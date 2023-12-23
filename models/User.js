@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true },
-  firstname: { type: String, required: true },
-  lastname: { type: String, required: true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   phone: { type: Number, required: true },
   status: { type: String },
   password: {
@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
       },
       message: "Password must be at least 6 characters long",
     },
+  },
+  otp: {
+    code: String,
+    expiresAt: Date,
   },
 });
 
