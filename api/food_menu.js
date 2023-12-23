@@ -1,12 +1,13 @@
 const FoodMenu = require("../models/Foodmenu");
 
 // Add Food Menu
-async function addFoodMenu(name, description, price) {
+async function addFoodMenu(name, description, price, image) {
   try {
     const newFoodMenu = new FoodMenu({
       name,
       description,
       price,
+      image
     });
 
     const savedFoodMenu = await newFoodMenu.save();

@@ -195,12 +195,13 @@ app.get("/api/orders/:orderId", async (req, res) => {
 // Add Food Menu API
 app.post("/api/foodMenus/add", async (req, res) => {
   try {
-    const { name, description, price } = req.body;
+    const { name, description, price, image } = req.body;
 
     const savedFoodMenu = await foodMenuController.addFoodMenu(
       name,
       description,
-      price
+      price,
+      image
     );
 
     res.status(201).json({
