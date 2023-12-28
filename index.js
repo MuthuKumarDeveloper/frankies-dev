@@ -10,7 +10,7 @@ const updateUser = require("./api/update_user");
 const deleteUser = require("./api/delete_user");
 const loginUser = require("./api/login");
 const getUserProfile = require("./api/get_profile");
-const getAllCategories = require("./api/get_categories");
+const categoriesController = require("./api/get_categories");
 const orderController = require("./api/order_controller");
 const foodMenuController = require("./api/food_menu");
 
@@ -117,12 +117,7 @@ app.post("/api/users/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const loginResult = await loginUser(
-      email,
-      null,
-      true,
-      otp
-    );
+    const loginResult = await loginUser(email, null, true, otp);
 
     if (loginResult === "OTP verified successfully") {
       res.status(200).json({ message: "OTP verified successfully" });
@@ -293,11 +288,48 @@ app.get("/api/profile/:userId", async (req, res) => {
 app.get("/api/categories", async (_req, res) => {
   console.log("Received GET request to /api/categories");
   try {
-    const categories = await getAllCategories();
+    const categories = await categoriesController.getAllCategories();
 
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+// Add a new category
+app.post("/api/categories", async (req, res) => {
+  try {
+    const newCategory = await categoriesController.addCategory(req.body);
+
+    res.status(201).json(newCategory);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add category" });
+  }
+});
+
+// Edit a category
+app.put("/api/categories/:id", async (req, res) => {
+  try {
+    const updatedCategory = await categoriesController.editCategory(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json(updatedCategory);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to edit category" });
+  }
+});
+
+// Delete a category
+app.delete("/api/categories/:id", async (req, res) => {
+  console.log(`Received DELETE request to /api/categories/${req.params.id}`);
+  try {
+    const deletedCategory = await categoriesController.deleteCategory(req.params.id);
+
+    res.status(200).json(deletedCategory);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete category" });
   }
 });
 

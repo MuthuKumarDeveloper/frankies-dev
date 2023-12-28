@@ -8,6 +8,6 @@ const foodMenuSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-const FoodMenu = mongoose.model('foodmenu', foodMenuSchema);
+const FoodMenu = mongoose.model('items', foodMenuSchema);
 
 module.exports = FoodMenu;
