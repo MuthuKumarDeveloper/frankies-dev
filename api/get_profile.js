@@ -10,15 +10,7 @@ async function getUserProfile(userId) {
       return null;
     }
 
-    const sanitizedUserProfile = {
-      _id: userProfile._id,
-      firstname: userProfile.firstname,
-      lastname: userProfile.lastname,
-      email: userProfile.email,
-      status: userProfile.status,
-    };
-
-    return sanitizedUserProfile;
+    return userProfile;
   } catch (error) {
     throw new Error("Error fetching user profile from the database");
   }
